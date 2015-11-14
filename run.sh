@@ -1,1 +1,1 @@
-LD_PRELOAD=./libLinFX.so glxgears
+LD_PRELOAD=./source/libLinFX.so glxgears

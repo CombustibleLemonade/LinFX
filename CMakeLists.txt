@@ -4,8 +4,8 @@ project(LinFX)
 
 add_definitions(-std=c++11)
 
-add_executable(run main.cpp)
-target_link_libraries(run ${CMAKE_DL_LIBS})
+add_subdirectory(exec)
+add_subdirectory(source)
 
-add_library(LinFX SHARED library.cpp)
-configure_file(run.sh run.sh COPYONLY)
+
+include_directories(${Boost_INCLUDE_DIRS})
