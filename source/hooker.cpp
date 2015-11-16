@@ -3,7 +3,7 @@
 #endif
 
 #include "hooker.h"
-#include "headerfile.h"
+// #include "headerfile.h"
 
 #include <iostream>
 
@@ -18,7 +18,7 @@ Return Hooker<Return, Args...>::operator ()(Args... arguments){
 }
 
 void testFunc() {}
-
+/*
 void glXSwapBuffers(Display *dpy, GLXDrawable drawable){
 	lglClear(GL_DEPTH_BUFFER_BIT);
 	lglDisable(GL_LIGHTING);
@@ -33,7 +33,7 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable){
 	lglEnable(GL_LIGHTING);
 	//lglMatrixMode(GL_MODELVIEW);
 	lglXSwapBuffers(dpy, drawable);
-}
+}*/
 
 GLXContext glXCreateContext(Display *dpy, XVisualInfo *vis, GLXContext shareList, int direct){
 
