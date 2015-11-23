@@ -13,24 +13,39 @@
 
 #include <initializer_list>
 
-std::string replace_all(std::string s, const char* a, const char* b);
+std::string replace_all(std::string& s, const char* a, const char* b);
 bool has_substring(std::string s, const char* sub);
 
 class Function{
+public:
 	std::string name; // Name of the function
 	std::string return_type; // Type it returns
 	std::vector<std::string> arguments; // Types of the arguments
+	bool is_function;
 
-public:
 	static std::string prefix;
 	Function(std::string code){
+		is_function = true;
+		if (code.find("...") != std::string::npos){
+			is_function = false;
+			return;
+		}
+
 		while(code.find(" ") == 0){
 			code.erase(0, 1);
 		}
+
 		std::stringstream codestream(code);
 		std::getline(codestream, return_type, ' ');
+		if (return_type.find("static") != std::string::npos){
+			std::getline(codestream, return_type, ' ');
+		}
+
 		std::getline(codestream, name, '(');
 		name = replace_all(name, " ", "");
+		if (name.empty()){
+			std::cout << code << std::endl;
+		}
 
 		if (has_substring(name, "*")){ // Our return type is actually a pointer
 			name.erase(name.find("*"), 1); // Remove it from the name
@@ -42,8 +57,21 @@ public:
 		if (has_substring(name, "*")){ // * is from the function pointer, not the return type
 			name.erase(name.find("*"), 1); // Just delete it and don't add it to the return type
 		}
+		name = replace_all(name, ")", "");
+
+		// This somehow happens, and I don't understand.
+		if (name.empty()){
+			is_function = false;
+			return;
+		}
+
 		std::string segment;
 		while(std::getline(codestream, segment, ',')){
+			if (segment.find("(") != std::string::npos){
+				is_function = false;
+				return;
+			}
+
 			// Cut off spaces in the beginning
 			while(segment.find(" ") == 0){
 				segment.erase(0, 1);
@@ -52,18 +80,29 @@ public:
 			if (has_substring(segment, "*")){
 				segment.erase(segment.find("*") + 1, std::string::npos);
 			}
+			else if (has_substring(segment, "const") || has_substring(segment, "unsigned")){
+				size_t cutoff = std::min(segment.find(" ", segment.find(" ") + 1), segment.find(")"));
+				if (cutoff != std::string::npos){
+					segment.erase(cutoff, std::string::npos); // Cut off after second space
+				}
+			}
 			else if (has_substring(segment, " ")){
 				segment.erase(segment.find(" "), std::string::npos);
 			}
+			replace_all(segment, ")", "");
 
-			// Only the type is left
-			if (!segment.empty() && !has_substring(segment, "void")){
+			// Only the type is left -- TODO
+			if (!segment.empty() && !has_substring(segment, "void") && segment.size() > 1){
 				arguments.push_back(segment);
 			}
 		}
 	}
 
 	std::string create_hooker(){
+		if (!is_function) {
+			return "";
+		}
+
 		std::string hooker = "Hooker<" + return_type;
 		for(int i = 0; i < arguments.size(); i++){
 			hooker += ", ";
@@ -89,7 +128,7 @@ std::string exec(const char* cmd) {
 	return result;
 }
 
-std::string replace_all(std::string s, const char* a, const char* b){
+std::string replace_all(std::string& s, const char* a, const char* b){
 	std::size_t pos = s.find(a);
 	while(pos != std::string::npos){
 		s.replace(pos, strlen(a), b);
@@ -147,6 +186,7 @@ std::string delete_non_function_lines(std::string s){
 	std::string out = ""; // Output
 	std::string line; // Single line that's read in the while loop
 
+	bool is_arguments = false;
 	while(std::getline(lines, line, '\n')){
 		bool isFunctionLine = true; // Variable that determines if the line read is from a function
 
@@ -154,13 +194,12 @@ std::string delete_non_function_lines(std::string s){
 		isFunctionLine &= !has_substring(line, "typedef");
 		isFunctionLine &= !has_substring(line, "[");
 		isFunctionLine &= !has_substring(line, "]");
-		isFunctionLine &= !has_substring(line, "struct");
 		isFunctionLine &= !has_substring(line, "{");
 		isFunctionLine &= !has_substring(line, "}");
 		isFunctionLine &= !has_substring(line, "return");
 
 		if (isFunctionLine){
-			out += line;
+			out += line + " ";
 		}
 	}
 	return out;
@@ -169,7 +208,7 @@ std::string delete_non_function_lines(std::string s){
 // Delete all stuff that's non-function related in a line
 std::string delete_non_function_chars(std::string s){
 	s = replace_all(s, "__extension__", "");
-
+	s = replace_all(s, "__inline", "");
 	if (has_substring(s, "__attribute__")){
 		parse_parentices(s, "__attribute__");
 	}
@@ -177,6 +216,7 @@ std::string delete_non_function_chars(std::string s){
 	s = replace_all(s, "  ", " ");
 	s = replace_all(s, "extern ", "");
 	s = replace_all(s, "const ", "");
+	s = replace_all(s, "struct ", "");
 	return s;
 }
 
@@ -204,8 +244,13 @@ std::string create_injection_header(const char* source_header){
 	std::vector<Function> functions;
 	while(std::getline(code, segment, ';')){
 		std::string function = parse_segment_to_function(segment);
+
 		if (!function.empty()){
-			functions.push_back(Function(function));
+			Function f(function);
+			if (f.name.empty() && f.is_function){
+				std::cout << f.is_function;
+			}
+			functions.push_back(f);
 		}
 	}
 
@@ -214,10 +259,12 @@ std::string create_injection_header(const char* source_header){
 	output += source_header;
 	output += "\"\n";
 	for (Function o : functions){
-		output += o.create_hooker() + "\n";
+		std::string hooker_line = o.create_hooker();
+		if (hooker_line.find("<>") != std::string::npos){
+		}
+		output += hooker_line + "\n";
 	}
 
-	std::cout << output << std::endl;
 	return output;
 }
 

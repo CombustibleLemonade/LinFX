@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-add_executable(proceduralHeader main.cpp)
+add_executable(proceduralHeader parse.cpp)
 target_link_libraries(proceduralHeader ${CMAKE_DL_LIBS})
 
 #add_custom_target(runner ALL DEPENDS headerfile)
