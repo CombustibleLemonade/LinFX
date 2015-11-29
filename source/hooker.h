@@ -3,9 +3,10 @@
 #include <dlfcn.h>
 #include <execinfo.h>
 
-#include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glext.h>
+
+#include <GL/glu.h>
 
 #include <iostream>
 #include <typeinfo>
