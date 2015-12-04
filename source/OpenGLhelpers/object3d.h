@@ -7,8 +7,15 @@
 class Object3D{
 	GLuint vertexBuffer;
 	std::vector<GLfloat> vertexBufferData;
+
+	GLuint UVBuffer;
+	std::vector<GLfloat> UVBufferData;
+
 	GLuint VertexArrayID;
 	GLuint shaderProgram;
+
+	GLint attributeUV = -1;
+	GLint attributeTex = -1;
 public:
 	GLenum mode = GL_TRIANGLES;
 
@@ -16,6 +23,8 @@ public:
 	Object3D(std::vector<GLfloat> vertices);
 
 	void setVertices(std::vector<GLfloat> vertices);
+	void setUV(std::vector<GLfloat> UV);
+
 	void setShaderProgram(const char* vertexShader, const char* fragmentshader);
 	void draw();
 };

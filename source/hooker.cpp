@@ -76,24 +76,44 @@ void init(){
 //	glPopMatrix();
 
 	test.setVertices({
-					  1.0f,  1.0f, 0.0f,
-					 -1.0f,  1.0f, 0.0f,
-					 -1.0f, -1.0f, 0.0f,
-					  1.0f, -0.5f, 0.0f,
-				  });
+					 1.0f,  1.0f, 0.0f,
+					-1.0f,  1.0f, 0.0f,
+					-1.0f, -1.0f, 0.0f,
+					 1.0f, -1.0f, 0.0f,
+				});
+
+	test.setUV({
+					 1.0f, 1.0f,
+					 0.0f, 1.0f,
+					 0.0f, 0.0f,
+					 1.0f, 0.0f
+				});
 
 	std::string vertexShader;
 	vertexShader += "#version 330 core \n";
 	vertexShader += "layout(location = 0) in vec3 vertexPosition_modelspace;";
+	vertexShader += "layout(location = 1) in vec2 vertexUV;";
+	vertexShader += "out vec2 UV;";
 	vertexShader += "void main(){";
 	vertexShader += "gl_Position = vec4(vertexPosition_modelspace, 1);";
+	vertexShader += "UV = vertexUV;";
 	vertexShader += "}";
 
 
 	std::string fragmentShader;
 	fragmentShader += "#version 330 core \n";
+	fragmentShader += "uniform sampler2D textureSampler; \n";
+	fragmentShader += "in vec2 UV; \n";
+
+	fragmentShader += "float bulge(float x){ \n";
+	fragmentShader += "return sin(-x * 1.570796327) * 1.2 + 1.0*x;";
+	fragmentShader += "}";
+	fragmentShader += "";
+
 	fragmentShader += "void main(void){ \n";
-	fragmentShader += "gl_FragColor = vec4(0.5, 0.0, 0.0, 1.0); \n";
+	fragmentShader += "vec2 UVedit = UV; \n";
+	fragmentShader += "UVedit = vec2(UVedit.x, UVedit.y);";
+	fragmentShader += "gl_FragColor = vec4(texture(textureSampler, UVedit).rgb * 0.2, 1.0); \n";
 	fragmentShader += "} \n";
 
 	test.setShaderProgram(vertexShader.c_str(), fragmentShader.c_str());
@@ -118,10 +138,9 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable){
 		is_initialized = true;
 		init();
 	}
+
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
-
-	glClearColor(0, 0.2, 0.2, 1);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -148,6 +167,9 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable){
 	// Draw quad with tex coords
 	drawQuad();
 
+	glUseProgram(0);
+
+
 	// Pop matrices
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -169,13 +191,15 @@ void glXSwapBuffers(Display *dpy, GLXDrawable drawable){
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, viewport[2], viewport[3]);
 }
 
-inline void initMyResource() { Q_INIT_RESOURCE(shaders); }
+
+//void glBindFramebuffer(GLenum target, GLuint framebuffer){
+//	lglBindFramebuffer(target, framebuffer);
+//}
+
 
 GLXContext glXCreateContext(Display *dpy, XVisualInfo *vis, GLXContext shareList, int direct){
 	Hooker<GLXContext, Display*, XVisualInfo*, GLXContext, int> hooker(__FUNCTION__);
 	GLXContext return_value = hooker(dpy, vis, shareList, direct);
-
-
 
 	return return_value;
 }

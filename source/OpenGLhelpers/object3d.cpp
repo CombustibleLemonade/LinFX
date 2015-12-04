@@ -3,11 +3,7 @@
 #include "object3d.h"
 #include <iostream>
 
-Object3D::Object3D(){
-	// Create the buffer object
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
-}
+Object3D::Object3D(){}
 
 Object3D::Object3D(std::vector<GLfloat> vertices){
 	Object3D();
@@ -23,6 +19,18 @@ void Object3D::setVertices(std::vector<GLfloat> vertices){
 	glBufferData(GL_ARRAY_BUFFER,										// What buffer we use
 				 sizeof(vertexBufferData[0]) * vertexBufferData.size(),	// Size of the data
 				 &vertexBufferData[0],									// First element of data
+				 GL_STATIC_DRAW);
+}
+
+void Object3D::setUV(std::vector<GLfloat> UV){
+	UVBufferData = UV;
+
+	// Create UV buffer data
+	glGenBuffers(1, &UVBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, UVBuffer);
+	glBufferData(GL_ARRAY_BUFFER,								// What buffer we use
+				 sizeof(UVBufferData[0]) * UVBufferData.size(),	// Size of the data
+				 &UVBufferData[0],								// First element of data
 				 GL_STATIC_DRAW);
 }
 
@@ -50,13 +58,15 @@ void Object3D::setShaderProgram(const char *vertexShader, const char *fragmentSh
 
 		return;
 	}
+
+	success = 0;
 	glGetShaderiv(vsSource, GL_COMPILE_STATUS, &success);
 	if (!success){
 		GLint maxLength = 0;
-		glGetShaderiv(fsSource, GL_INFO_LOG_LENGTH, &maxLength);
+		glGetShaderiv(vsSource, GL_INFO_LOG_LENGTH, &maxLength);
 
 		std::vector<GLchar> infolog(maxLength);
-		glGetShaderInfoLog(fsSource, maxLength, &maxLength, &infolog[0]);
+		glGetShaderInfoLog(vsSource, maxLength, &maxLength, &infolog[0]);
 		std::cout << infolog.data() << std::endl;
 
 		return;
@@ -80,12 +90,26 @@ void Object3D::setShaderProgram(const char *vertexShader, const char *fragmentSh
 
 	glDetachShader(shaderProgram, vsSource);
 	glDetachShader(shaderProgram, fsSource);
+
+
+	attributeUV = glGetAttribLocation(shaderProgram, "vertexUV");
+	attributeTex = glGetUniformLocation(shaderProgram, "textureSampler");
+
+	if (attributeUV == -1){
+		std::cout << "UV not bound. " << std::endl;
+	}
+	if (attributeTex == -1){
+		std::cout << "Texture not bound. " << std::endl;
+	}
 }
 
 void Object3D::draw(){
-	glDisable(GL_TEXTURE_2D);
+	glEnable(GL_TEXTURE_2D);
 
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(attributeUV);
+	glUseProgram(shaderProgram);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glVertexAttribPointer(
 				0,
@@ -95,9 +119,24 @@ void Object3D::draw(){
 				0,
 				(void*)0 );
 
+	glBindBuffer(GL_ARRAY_BUFFER, UVBuffer);
+	glVertexAttribPointer(
+				attributeUV,		// attribute
+				2,                  // number of elements per vertex, here (x,y)
+				GL_FLOAT,           // the type of each element
+				GL_FALSE,           // take our values as-is
+				0,                  // no extra data between each position
+				(void*)0			// offset of first element
+	  );
+
+	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(attributeTex, 0);
+
 	// Draw triangle
-	glUseProgram(shaderProgram);
-//	std::cout << glGetError() << std::endl;
 	glDrawArrays(mode, 0, vertexBufferData.size()/3);
+
 	glDisableVertexAttribArray(0);
+	glEnableVertexAttribArray(attributeUV);
+
+
 }
