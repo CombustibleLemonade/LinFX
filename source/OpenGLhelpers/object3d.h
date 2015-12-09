@@ -13,6 +13,7 @@ class Object3D{
 
 	GLuint VertexArrayID;
 	GLuint shaderProgram;
+	bool hasShaderProgram = false;
 
 	GLint attributeUV = -1;
 	GLint attributeTex = -1;

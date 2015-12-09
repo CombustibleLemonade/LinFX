@@ -9,7 +9,5 @@ find_package(GLUT REQUIRED)
 
 include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIRS})
 
-message(ERROR ${Qt5Core_FOUND})
-
-add_library(LinFX SHARED hooker.cpp OpenGLhelpers/object3d.cpp)
+add_library(LinFX SHARED  hooker.cpp OpenGLhelpers/object3d.cpp OpenGLhelpers/effect.cpp OpenGLhelpers/print.cpp)
 target_link_libraries(LinFX GL GLU Qt5::Core)

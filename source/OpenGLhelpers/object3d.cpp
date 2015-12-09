@@ -18,8 +18,8 @@ void Object3D::setVertices(std::vector<GLfloat> vertices){
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER,										// What buffer we use
 				 sizeof(vertexBufferData[0]) * vertexBufferData.size(),	// Size of the data
-				 &vertexBufferData[0],									// First element of data
-				 GL_STATIC_DRAW);
+			&vertexBufferData[0],									// First element of data
+			GL_STATIC_DRAW);
 }
 
 void Object3D::setUV(std::vector<GLfloat> UV){
@@ -30,8 +30,8 @@ void Object3D::setUV(std::vector<GLfloat> UV){
 	glBindBuffer(GL_ARRAY_BUFFER, UVBuffer);
 	glBufferData(GL_ARRAY_BUFFER,								// What buffer we use
 				 sizeof(UVBufferData[0]) * UVBufferData.size(),	// Size of the data
-				 &UVBufferData[0],								// First element of data
-				 GL_STATIC_DRAW);
+			&UVBufferData[0],								// First element of data
+			GL_STATIC_DRAW);
 }
 
 void Object3D::setShaderProgram(const char *vertexShader, const char *fragmentShader){
@@ -95,20 +95,24 @@ void Object3D::setShaderProgram(const char *vertexShader, const char *fragmentSh
 	attributeUV = glGetAttribLocation(shaderProgram, "vertexUV");
 	attributeTex = glGetUniformLocation(shaderProgram, "textureSampler");
 
+	hasShaderProgram = true;
 	if (attributeUV == -1){
 		std::cout << "UV not bound. " << std::endl;
+		hasShaderProgram = false;
 	}
 	if (attributeTex == -1){
 		std::cout << "Texture not bound. " << std::endl;
+		hasShaderProgram = false;
 	}
 }
 
 void Object3D::draw(){
+
 	glEnable(GL_TEXTURE_2D);
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(attributeUV);
-	glUseProgram(shaderProgram);
+//	glUseProgram(shaderProgram);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glVertexAttribPointer(
@@ -127,16 +131,21 @@ void Object3D::draw(){
 				GL_FALSE,           // take our values as-is
 				0,                  // no extra data between each position
 				(void*)0			// offset of first element
-	  );
+				);
 
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(attributeTex, 0);
 
-	// Draw triangle
+//	glBegin(GL_TRIANGLES);                      // Drawing Using Triangles
+//	glVertex3f( 0.0f, 1.0f, 0.0f);              // Top
+//	glVertex3f(-1.0f,-1.0f, 0.0f);              // Bottom Left
+//	glVertex3f( 1.0f,-1.0f, 0.0f);            // Bottom Right
+//	glEnd();                            // Finished Drawing The Triangle
+
 	glDrawArrays(mode, 0, vertexBufferData.size()/3);
 
 	glDisableVertexAttribArray(0);
 	glEnableVertexAttribArray(attributeUV);
 
-
+//	glUseProgram(0);
 }

@@ -14,7 +14,6 @@
 
 template<typename Return, typename... Args>
 class Hooker{
-
 public:
 	typedef Return(*fType)(Args... arguments);
 	fType f;
