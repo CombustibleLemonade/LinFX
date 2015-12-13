@@ -24,6 +24,7 @@ class Effect{
 
 	bool hasInitialized;
 	Object3D screen;
+
 public:
 	enum Preset{
 		NONE = -1,
@@ -35,16 +36,24 @@ public:
 private:
 	Preset preset = NONE;
 	void setPreset(Preset p);
-
 	void setViewport(GLint v[]);
 public:
-	static void staticInit();
+	// These functions do gl-dependent stuff after gl initialization
+	static void staticInit(); // Runs once
+	void init(); // Runs every effect
+
+	// Binds the effect framebuffer
+	static void bindEffectFramebuffer();
+	// Binds the system framebuffer
+	static void bindSystemFramebuffer();
+
 	Effect();
 	Effect(Preset p);
 	Effect(std::string vs, std::string fs);
 
+	// Sets the shader program with a fragment shader, and a vertex shader
 	void setShaderProgram(std::string vs, std::string fs);
-
+	// Draws the effect
 	void draw();
 };
 

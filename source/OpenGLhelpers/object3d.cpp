@@ -18,8 +18,8 @@ void Object3D::setVertices(std::vector<GLfloat> vertices){
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER,										// What buffer we use
 				 sizeof(vertexBufferData[0]) * vertexBufferData.size(),	// Size of the data
-			&vertexBufferData[0],									// First element of data
-			GL_STATIC_DRAW);
+				 &vertexBufferData[0],									// First element of data
+				 GL_STATIC_DRAW);
 }
 
 void Object3D::setUV(std::vector<GLfloat> UV){
@@ -30,8 +30,8 @@ void Object3D::setUV(std::vector<GLfloat> UV){
 	glBindBuffer(GL_ARRAY_BUFFER, UVBuffer);
 	glBufferData(GL_ARRAY_BUFFER,								// What buffer we use
 				 sizeof(UVBufferData[0]) * UVBufferData.size(),	// Size of the data
-			&UVBufferData[0],								// First element of data
-			GL_STATIC_DRAW);
+				 &UVBufferData[0],								// First element of data
+				 GL_STATIC_DRAW);
 }
 
 void Object3D::setShaderProgram(const char *vertexShader, const char *fragmentShader){
@@ -112,7 +112,7 @@ void Object3D::draw(){
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(attributeUV);
-//	glUseProgram(shaderProgram);
+	glUseProgram(shaderProgram);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glVertexAttribPointer(
@@ -136,16 +136,10 @@ void Object3D::draw(){
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(attributeTex, 0);
 
-//	glBegin(GL_TRIANGLES);                      // Drawing Using Triangles
-//	glVertex3f( 0.0f, 1.0f, 0.0f);              // Top
-//	glVertex3f(-1.0f,-1.0f, 0.0f);              // Bottom Left
-//	glVertex3f( 1.0f,-1.0f, 0.0f);            // Bottom Right
-//	glEnd();                            // Finished Drawing The Triangle
-
 	glDrawArrays(mode, 0, vertexBufferData.size()/3);
 
 	glDisableVertexAttribArray(0);
 	glEnableVertexAttribArray(attributeUV);
 
-//	glUseProgram(0);
+	glUseProgram(0);
 }
